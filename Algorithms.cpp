@@ -6,6 +6,7 @@
 #include <string>
 #include <iomanip>
 #include <cmath>
+#include <sstream>
 using namespace std;
 struct Process
 {
@@ -110,73 +111,78 @@ void fcfs(std::vector<Process> &processes, int last_instant, bool trace_mode)
         print_stats(processes);
     }
 }
-void round_robin(std::vector<Process> &processes, int quantum, int last_instant, bool trace_mode)
-{
+void roundRobin(vector<Process>& processes, int time_quantum, int last_instant, bool trace_mode) {
+    queue<Process*> readyQueue; // Queue to hold ready processes
     int current_time = 0;
-    std::queue<Process *> ready_queue;
-    for (auto &process : processes)
-    {
-        process.remaining_time = process.service_time;
+    int completed = 0; // Number of completed processes
+    int n = processes.size(); // Total number of processes
+
+    // Initialize remaining_time for each process
+    for (auto& p : processes) {
+        p.remaining_time = p.service_time;
     }
 
-    int num_processes = processes.size();
-    int completed = 0;
-    size_t index = 0;
+    cout << "Round Robin Scheduling (Time Quantum = " << time_quantum << ")" << endl;
 
-    while (completed < num_processes)
-    {
-        while (index < processes.size() && processes[index].arrival_time <= current_time)
-        {
-            ready_queue.push(&processes[index]);
-            index++;
+    while (completed < n) {
+        // Add all processes that have arrived by the current time to the ready queue
+        for (auto& p : processes) {
+            if (p.arrival_time <= current_time && p.remaining_time > 0) {
+                bool inQueue = false;
+                queue<Process*> tempQueue = readyQueue;
+                while (!tempQueue.empty()) {
+                    if (tempQueue.front() == &p) {
+                        inQueue = true;
+                        break;
+                    }
+                    tempQueue.pop();
+                }
+                if (!inQueue) {
+                    readyQueue.push(&p);
+                }
+            }
         }
 
-        if (ready_queue.empty())
-        {
+        // Check if the ready queue is empty
+        if (readyQueue.empty()) {
             current_time++;
             continue;
         }
 
-        Process *current = ready_queue.front();
-        ready_queue.pop();
+        // Process the front of the queue
+        Process* current_process = readyQueue.front();
+        readyQueue.pop();
 
-        int execution_time = std::min(current->remaining_time, quantum);
+        // Execute the process for the time quantum or the remaining time, whichever is smaller
+        int execution_time = min(time_quantum, current_process->remaining_time);
         current_time += execution_time;
-        current->remaining_time -= execution_time;
+        current_process->remaining_time -= execution_time;
 
-        while (index < processes.size() && processes[index].arrival_time <= current_time)
-        {
-            ready_queue.push(&processes[index]);
-            index++;
-        }
-
-        if (current->remaining_time > 0)
-        {
-            ready_queue.push(current);
-        }
-        else
-        {
-            current->finish_time = current_time;
-            current->turnaround_time = current->finish_time - current->arrival_time;
-            current->waiting_time = current->turnaround_time - current->service_time;
+        // If the process is finished, calculate its metrics
+        if (current_process->remaining_time == 0) {
             completed++;
+            current_process->finish_time = current_time;
+            current_process->turnaround_time = current_process->finish_time - current_process->arrival_time;
+            current_process->waiting_time = current_process->turnaround_time - current_process->service_time;
+        } else {
+            // If not finished, add it back to the ready queue
+            readyQueue.push(current_process);
         }
     }
-    if (trace_mode)
-    {
-        print_trace("RR", processes, last_instant);
-    }
-    else
-    {
-        print_stats(processes);
-    }
+        if (trace_mode){
+            print_trace("RR", processes, last_instant);
+        }
+        else{
+            print_stats(processes);
+        }
+    
 }
 void srt(std::vector<Process> &processes, int last_instant, bool trace_mode)
 {
     int current_time = 0;
     int completed = 0;
 
-    while (completed < processes.size())
+    while (completed < static_cast<std::vector<Process>::size_type>(processes.size()))
     {
         Process *shortest = nullptr;
         for (auto &process : processes)
@@ -487,10 +493,17 @@ void aging(std::vector<Process> &processes, int last_instant, int aging_incremen
 }
 
 
-
 int main()
+// int main(int argc, char *argv[])
 {
+    // if (argc < 2)
+// {
+//     std::cerr << "Usage: " << argv[0] << " <input_file>\n";
+//     return 1;
+// }
+// std::ifstream file(argv[1]);
     std::ifstream file("02a-input.txt");
+
     if (!file)
     {
         std::cerr << "Error: Could not open input file.\n";
@@ -505,23 +518,43 @@ int main()
 
     // Line 2: CPU scheduling policies and their parameters
     getline(file, line);
-    cout << "Line 2: " << line << endl;
-    size_t dashPos = line.find('-');
+cout << "Line 2: " << line << endl;
+
+vector<pair<int, int>> algorithms; // To store algorithm and parameter pairs
+stringstream ss(line);
+string part;
+
+// Parse each part separated by commas
+while (getline(ss, part, ',')) {
+    size_t dashPos = part.find('-'); // Look for dash in the current part
     int algorithm;
     int parameter = 0;
-    if (dashPos != string::npos)
-    {
-        // Policy with a parameter
-        algorithm = stoi(line.substr(0, dashPos));  // Extract algorithm number
-        parameter = stoi(line.substr(dashPos + 1)); // Extract parameter
+
+    if (dashPos != string::npos) {
+        // Policy with a parameter (e.g., "2-4")
+        algorithm = stoi(part.substr(0, dashPos));      // Extract algorithm number
+        parameter = stoi(part.substr(dashPos + 1));    // Extract parameter
         cout << "Algorithm: " << algorithm << ", Parameter: " << parameter << endl;
-    }
-    else
-    {
-        // Policy without a parameter
-        algorithm = stoi(line);
+    } else {
+        // Policy without a parameter (e.g., "1")
+        algorithm = stoi(part);
         cout << "Algorithm: " << algorithm << " (No parameter)" << endl;
     }
+
+    // Store the parsed algorithm and its parameter
+    algorithms.push_back({algorithm, parameter});
+}
+
+// Output parsed algorithms
+for (const auto& alg : algorithms) {
+    cout << "Algorithm: " << alg.first;
+    if (alg.second != 0)
+        cout << ", Parameter: " << alg.second;
+    else
+        cout << " (No Parameter)";
+    cout << endl;
+}
+
 
     // Line 3: Last instant to be used in simulation
     int lastInstant;
@@ -537,82 +570,88 @@ int main()
 
     // Line 5 onwards: Description of processes
     vector<Process> processes;
-    cout << "Line 5 onwards: Process descriptions:" << endl;
-    for (int i = 0; i < numProcesses; ++i)
-    {
-        Process p;
-        getline(file, line); // Read the line describing the process
+cout << "Line 5 onwards: Process descriptions:" << endl;
 
-        stringstream ss(line);
-        string item;
+for (int i = 0; i < numProcesses; ++i) {
+    Process p;
+    getline(file, line); // Read the line describing the process
 
-        // Read process name, arrival time, and service time
-        getline(ss, item, ',');
-        p.name = item[0]; // Process name (single character)
+    stringstream processStream(line); // Use a stringstream for this line
+    string item;
 
-        getline(ss, item, ',');
-        p.arrival_time = stoi(item); // Arrival Time
+    // Read process name, arrival time, and service time
+    getline(processStream, item, ',');
+    p.name = item[0]; // Process name (single character)
 
-        getline(ss, item, ',');
-        p.service_time = stoi(item); // Service Time
+    getline(processStream, item, ',');
+    p.arrival_time = stoi(item); // Arrival Time
 
-        processes.push_back(p);
+    getline(processStream, item, ',');
+    p.service_time = stoi(item); // Service Time
 
-        // Output the process details
-        cout << "Process " << i + 1 << ": "
-             << "Name: " << p.name
-             << ", Arrival Time: " << p.arrival_time
-             << ", Service Time: " << p.service_time << endl;
-    }
+    processes.push_back(p); // Add to processes vector
 
-    // Copy original processes to reset between algorithms
-    const std::vector<Process> original_processes = processes;
+    // Output the process details
+    cout << "Process " << i + 1 << ": "
+         << "Name: " << p.name
+         << ", Arrival Time: " << p.arrival_time
+         << ", Service Time: " << p.service_time << endl;
+}
+
+// Copy original processes to reset between algorithms
+const std::vector<Process> original_processes = processes;
+
 
     // Determine whether we are in trace or stats mode
     bool trace_mode = (mode == "trace");
 
     // Parse algorithms and execute them
-        processes = original_processes; // Reset processes for each algorithm
-        if (algorithm== 1)
-        {
-            fcfs(processes, lastInstant, trace_mode);
-        }
-        else if (algorithm== 2)
-        {
-            int quantum = parameter;
-            round_robin(processes, quantum, lastInstant, trace_mode);
-        }
-        else if (algorithm== 3)
-        {
-            shortest_process_next(processes, lastInstant, trace_mode);
-        }
-        else if (algorithm==4)
-        {
-            srt(processes, lastInstant, trace_mode);
-        }
-        else if (algorithm== 5)
-        {
-            hrrn(processes, lastInstant, trace_mode);
-        }
-        else if (algorithm== 6)
-        {
-            fb1(processes, lastInstant, trace_mode);
-        }
-        else if (algorithm== 7)
-        {
-            fb2i(processes, lastInstant, trace_mode);
-        }
-        else if (algorithm== 8)
-        {
-            int quantum = parameter;
-            int aging_increment = 1; // Set an appropriate aging increment
-            aging(processes, lastInstant, aging_increment, trace_mode);
-        }
-        else
-        {
-            std::cerr << "Unknown algorithm: " << algorithm << "\n";
-        }
+        for (const auto& alg : algorithms)
+    {
+        int algorithm = alg.first;
+        int parameter = alg.second;
 
+        // Reset processes for each algorithm
+        processes = original_processes;
+
+        cout << "Executing Algorithm: " << algorithm;
+        if (parameter != 0)
+            cout << " with Parameter: " << parameter << endl;
+        else
+            cout << " (No Parameter)" << endl;
+
+        switch (algorithm)
+        {
+        case 1:
+            fcfs(processes, lastInstant, trace_mode);
+            break;
+        case 2:
+            roundRobin(processes, parameter, lastInstant, trace_mode);
+            break;
+        case 3:
+            shortest_process_next(processes, lastInstant, trace_mode);
+            break;
+        case 4:
+            srt(processes, lastInstant, trace_mode);
+            break;
+        case 5:
+            hrrn(processes, lastInstant, trace_mode);
+            break;
+        case 6:
+            fb1(processes, lastInstant, trace_mode);
+            break;
+        case 7:
+            fb2i(processes, lastInstant, trace_mode);
+            break;
+        case 8:
+            {int aging_increment = 1; // Set an appropriate aging increment
+            aging(processes, lastInstant, aging_increment, trace_mode);
+            break;}
+        default:
+            cerr << "Unknown algorithm: " << algorithm << "\n";
+            break;
+        }
+    }
 
     return 0;
 }
