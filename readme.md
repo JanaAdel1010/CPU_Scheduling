@@ -72,12 +72,5 @@ CPU_Sch/
 - **`run`**: Executes the simulator for all input files and saves results to `outputs`.
 - **`clean`**: Removes compiled binaries and temporary files.
 
-## Contributing
-If you would like to contribute to this project, please follow these steps:
-1. Fork the repository.
-2. Create a new branch for your feature or bugfix.
-3. Commit your changes with clear descriptions.
-4. Submit a pull request.
 
-For questions or issues, please contact the project maintainer.
 
