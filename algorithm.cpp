@@ -7,38 +7,6 @@
 #include <cmath>
 #include "process.h"
 using namespace std;
-bool compareByServiceTimeAndArrivalTime(Process *p1, Process *p2)
-{
-    if (p1->ServiceTime == p2->ServiceTime)
-    {
-        return p1->ArrivalTime > p2->ArrivalTime;
-    }
-    return p1->ServiceTime > p2->ServiceTime;
-}
-
-bool compareByHRRN(Process *p1, Process *p2)
-{
-    float ratio1 = (p1->WaitingTime + p1->ServiceTime) / (float)p1->ServiceTime;
-    float ratio2 = (p2->WaitingTime + p2->ServiceTime) / (float)p2->ServiceTime;
-    if (ratio1 == ratio2)
-    {
-        return p1->ArrivalTime < p2->ArrivalTime;
-    }
-    return ratio1 < ratio2;
-}
-
-bool compareByPriorityAndWaitingTime(Process *p1, Process *p2)
-{
-    if (p1->priority == p2->priority)
-    {
-        return p1->WaitingTime < p2->WaitingTime;
-    }
-    return p1->priority < p2->priority;
-}
-
-
-
-
 void FCFS(vector<string> processes, const int instants, string status, string Algorithmname)
 {
     char **output = algo_output(processes.size(), instants);
@@ -610,4 +578,32 @@ int count_algo(string p)
             count++;
     }
     return count + 1;
+}
+bool compareByServiceTimeAndArrivalTime(Process *p1, Process *p2)
+{
+    if (p1->ServiceTime == p2->ServiceTime)
+    {
+        return p1->ArrivalTime > p2->ArrivalTime;
+    }
+    return p1->ServiceTime > p2->ServiceTime;
+}
+
+bool compareByHRRN(Process *p1, Process *p2)
+{
+    float ratio1 = (p1->WaitingTime + p1->ServiceTime) / (float)p1->ServiceTime;
+    float ratio2 = (p2->WaitingTime + p2->ServiceTime) / (float)p2->ServiceTime;
+    if (ratio1 == ratio2)
+    {
+        return p1->ArrivalTime < p2->ArrivalTime;
+    }
+    return ratio1 < ratio2;
+}
+
+bool compareByPriorityAndWaitingTime(Process *p1, Process *p2)
+{
+    if (p1->priority == p2->priority)
+    {
+        return p1->WaitingTime < p2->WaitingTime;
+    }
+    return p1->priority < p2->priority;
 }
