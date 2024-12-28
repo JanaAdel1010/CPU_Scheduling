@@ -2,6 +2,9 @@
 #define process_h
 #include <sstream>
 #include <string>
+#include <vector>
+#include <cstring>
+#include <cstdlib>
 
 typedef struct 
 {
@@ -16,9 +19,9 @@ typedef struct
     int WaitingTime;
     float NormTurn;
     int ready;
-}Process;
-Process* create_Process(char ProcessName, int ArrivalTime, int ServiceTime)
-{
+} Process;
+
+Process* create_Process(char ProcessName, int ArrivalTime, int ServiceTime) {
     Process *p = (Process *)malloc(sizeof(Process));
     p->ProcessName = ProcessName;
     p->processNumber = 0;
@@ -33,35 +36,25 @@ Process* create_Process(char ProcessName, int ArrivalTime, int ServiceTime)
     p->priority = ServiceTime;
     return p;
 }
-Process* formulate_Process(char process) {
-    stringstream ss;
-    ss << process;
-    string str[3];
-    char i = 0;
-    while (!ss.eof()) {
+
+Process* formulate_Process(const std::string& process) {
+    std::stringstream ss(process);
+    std::string str[3];
+    int i = 0;
+    while (!ss.eof() && i < 3) {
         getline(ss, str[i], ',');
         i++;
     }
-    return create_Process(str[0][0], stoi(str[1]), stoi(str[2]));
+    return create_Process(str[0][0], std::stoi(str[1]), std::stoi(str[2]));
 }
-Process* formulate_Process(char* process) {
-    stringstream ss(process);
-    string str[3];
-    char i = 0;
-    while (!ss.eof() && i < 3) { // Ensure we only process up to three fields
-        getline(ss, str[i], ',');
-        i++;
-    }
-    return create_Process(str[0][0], stoi(str[1]), stoi(str[2]));
-}
-Process** readyProcesses(vector<string> p) {
+
+Process** readyProcesses(const std::vector<std::string>& p) {
     Process** pr = (Process**)malloc(sizeof(Process*) * p.size());
     for (size_t i = 0; i < p.size(); i++) {
-        char process[p.at(i).length() + 1];
-        strcpy(process, p.at(i).c_str());
-        pr[i] = formulate_Process(process);
+        pr[i] = formulate_Process(p.at(i));
         pr[i]->processNumber = i;
     }
     return pr;
 }
-#endif 
+
+#endif
