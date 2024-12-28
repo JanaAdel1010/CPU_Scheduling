@@ -31,23 +31,24 @@ bool compareByPriorityAndWaitingTime(Process* p1, Process* p2) {
     }
     return p1->priority < p2->priority;
 }
-void printTrace(int instances, char** output, int NoOfProcesses, Process* p, string Algorithmname) {
-    // Directly print the algorithm name
-    cout << Algorithmname << " ";
+void printTrace(int instances, char** output, int NoOfProcesses, Process* p, std::string Algorithmname) {
+    const char* processNames[] = {"A", "B", "C", "D", "E"};
+
+    std::cout << Algorithmname << " ";
     for (int i = 0; i <= instances; i++) {
-        cout << (i % 10) << " ";
+        std::cout << (i % 10) << " ";
     }
-    cout << endl;
-    cout << "------------------------------------------------\n";
+    std::cout << std::endl;
+    std::cout << "------------------------------------------------\n";
 
     for (size_t i = 0; i < NoOfProcesses; i++) {
-        cout << p[i].ProcessName << "     ";
-        for (size_t j = 0; j < instances; j++) {
-            cout << "|" << output[i][j];
+        std::cout << processNames[i] << "     ";
+        for (size_t j = 0; j < instances; j++) { 
+            std::cout << "|" << output[i][j];
         }
-        cout << "| " << endl;
+        std::cout << "| " << std::endl;
     }
-    cout << "------------------------------------------------\n\n";
+    std::cout << "------------------------------------------------\n\n";
 }
 
 
@@ -171,7 +172,6 @@ void FCFS(vector <string> processes,const int instants, string status, string Al
  
         
 }
-//_______________RR_____________
 
 void RR(vector <string> processes,int quantum,const int instants, string status, string Algorithmname)
 {
@@ -252,13 +252,9 @@ void RR(vector <string> processes,int quantum,const int instants, string status,
     }
 }
 
-// _______________SPN___________________
-#include <functional> // For std::function
-
 void SPN(vector<string> processes, const int instants, string status, string Algorithmname)
 {
-    // Use the standalone comparator function for priority_queue
-    auto compare = compareByServiceTimeAndArrivalTime; // Reference to the function
+    auto compare = compareByServiceTimeAndArrivalTime;
     priority_queue<Process*, vector<Process*>, decltype(compare)> q(compare);
 
     char** output = algo_output(processes.size(), instants);
