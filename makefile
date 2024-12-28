@@ -1,24 +1,23 @@
-CXX = g++
-CXXFLAGS = -std=c++11 -Wall
-TARGET = scheduler
-SRCS = Algorithms.cpp
-OBJS = $(SRCS:.cpp=.o)
+all:build
 
-# Folder containing test files
-test_inputs = $(wildcard CPU_SCH/*)
+build: Algorithms.cpp
 
-all: $(TARGET)
+	g++	-std=c++11	-o	Algorithms	Algorithms.cpp
+INPUT_DIR = inputs
+OUTPUT_DIR = outputs
+INPUT_FILES = $(wildcard $(INPUT_DIR)/*.txt) 	
 
-$(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^
 
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-run: $(TARGET)
-	@for file in $(test_inputs); do \
-		./$(TARGET) < $$file; \
+run: Algorithms
+	@for input_file in $(INPUT_FILES); do \
+		base_name=$$(basename $$input_file .txt); \
+		base_name=$$(echo $$base_name | sed 's/-input//'); \
+		expected_output_file=$(OUTPUT_DIR)/$$base_name-output.txt; \
+		output_file=$(OUTPUT_DIR)/$$base_name-output.txt; \
+		./Algorithms < $$input_file > $$output_file; \
+		if diff -q $$output_file $$expected_output_file; then \
+			echo "Test $$base_name passed."; \
+		else \
+			echo "Test $$base_name failed."; \
+		fi \
 	done
-
-clean:
-	rm -f $(OBJS) $(TARGET)
