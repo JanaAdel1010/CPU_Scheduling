@@ -54,7 +54,7 @@ void FCFS(vector<string> processes, const int instants, string status, string Al
     string s = "trace";
     if (status.compare(s) == 0)
     {
-        printTrace(instants, output, processes.size(), *pr, Algorithmname.append("  "));
+        printTrace(instants, output, processes.size(), pr, Algorithmname.append("  "));
     }
     else
     {
@@ -133,7 +133,7 @@ void RR(vector<string> processes, int quantum, const int instants, string status
     Algorithmname = Algorithmname + quantum_str;
     if (status.compare(s) == 0)
     {
-        printTrace(instants, output, processes.size(), *pr, Algorithmname.append("  "));
+        printTrace(instants, output, processes.size(), pr, Algorithmname.append("  "));
     }
     else
     {
@@ -195,7 +195,7 @@ void SPN(vector<string> processes, const int instants, string status, string Alg
     string s = "trace";
     if (status.compare(s) == 0)
     {
-        printTrace(instants, output, processes.size(), *pr, Algorithmname.append("   "));
+        printTrace(instants, output, processes.size(), pr, Algorithmname.append("   "));
     }
     else
     {
@@ -268,7 +268,7 @@ void SRT(vector<string> processes, const int instants, string status, string Alg
 
     if (status == "trace")
     {
-        printTrace(instants, output, processes.size(), *pr, Algorithmname.append("   "));
+        printTrace(instants, output, processes.size(), pr, Algorithmname.append("   "));
     }
     else
     {
@@ -339,7 +339,7 @@ void HRRN(vector<string> processes, const int instants, string status, string Al
 
     if (status == "trace")
     {
-        printTrace(instants, output, processes.size(), *pr, Algorithmname.append("  "));
+        printTrace(instants, output, processes.size(), pr, Algorithmname.append("  "));
     }
     else
     {
@@ -478,7 +478,7 @@ void FB(vector<string> processes, int quantum, const int instants, string status
         {
             Algorithmname.append(" ");
         }
-        printTrace(instants, output, processes.size(), *pr, Algorithmname);
+        printTrace(instants, output, processes.size(), pr, Algorithmname);
     }
     else
     {
@@ -561,7 +561,7 @@ void Aging(vector<string> processes, int quantum, const int instants, string sta
     string s = "trace";
     if (status.compare(s) == 0)
     {
-        printTrace(instants, output, processes.size(), *pr, Algorithmname.append(" "));
+        printTrace(instants, output, processes.size(), pr, Algorithmname.append(" "));
     }
     else
     {

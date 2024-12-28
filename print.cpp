@@ -19,10 +19,8 @@ char **algo_output(int r, int c)
     }
     return output;
 }
-void printTrace(int instances, char **output, int NoOfProcesses, Process *p, string Algorithmname)
+void printTrace(int instances, char **output, int NoOfProcesses, Process **p, string Algorithmname)
 {
-    const char *processNames[] = {"A", "B", "C", "D", "E"};
-
     cout << Algorithmname;
     for (int i = 0; i <= instances; i++)
     {
@@ -33,7 +31,7 @@ void printTrace(int instances, char **output, int NoOfProcesses, Process *p, str
 
     for (size_t i = 0; i < NoOfProcesses; i++)
     {
-        cout << processNames[i] << "     ";
+        printf("%c     ", p[i]->ProcessName);
         for (size_t j = 0; j < instances; j++)
         {
             cout << "|" << output[i][j];
