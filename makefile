@@ -1,6 +1,6 @@
 all:build
 
-build: Algorithms.cpp
+build: main.cpp
 
 	g++	-std=c++11	-o	Algorithm	main.cpp	algorithm.cpp	print.cpp	process.cpp
 INPUT_DIR = inputs
