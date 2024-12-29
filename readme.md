@@ -31,7 +31,7 @@ To run this project, you need:
 
 ## Usage
 ### 1. Prepare Input Files
-Place all input files in the `inputs` directory. Each input file should define the processes for scheduling in the required format.
+Place all input files in the `testcases` directory. Each input file should define the processes for scheduling in the required format.
 
 ### 2. Build and run the Project
 Run the following command to compile and run the project:
