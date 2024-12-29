@@ -5,7 +5,7 @@
 #include <vector>
 #include <cstring>
 #include <cstdlib>
-
+// header file for process class
 typedef struct 
 {
     char ProcessName;
@@ -22,7 +22,7 @@ typedef struct
 } Process;
 
 Process* create_Process(char ProcessName, int ArrivalTime, int ServiceTime);
-Process* formulate_Process(const std::string& process);
-Process** readyProcesses(const std::vector<std::string>& p);
+Process* parse_process(const std::string& process);
+Process** processesarray(const std::vector<std::string>& p);
 
 #endif

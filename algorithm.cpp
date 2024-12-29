@@ -7,47 +7,60 @@
 #include <cmath>
 #include "process.h"
 using namespace std;
+// Function to implement First-Come, First-Served (FCFS) scheduling algorithm
 void FCFS(vector<string> processes, const int instants, string status, string Algorithmname)
 {
+    // Create a 2D output array to visualize the states of processes over time
     char **output = algo_output(processes.size(), instants);
-    Process **pr = readyProcesses(processes);
-    queue<Process *> q;
-    Process *CPU = nullptr;
-    int service;
+
+    // Convert process descriptions into an array of Process objects
+    Process **pr = processesarray(processes);
+
+    queue<Process *> q;               // Queue to manage processes in FCFS order
+    Process *currenlty_run = nullptr; // Pointer to the currently running process
+    int service;                      // Remaining service time for the currently running process
+
+    // Main loop to iterate through each time instant
     for (size_t i = 0; i < instants; i++)
     {
+        // Check if any process has arrived at the current time instant
         for (size_t j = 0; j < processes.size(); j++)
         {
-            if (i >= pr[j]->ArrivalTime)
+            if (i >= pr[j]->ArrivalTime) // Process has arrived
             {
-                if (pr[j]->ready == 0)
+                if (pr[j]->ready == 0) // Process has not yet been added to the ready queue
                 {
-                    q.push(pr[j]);
-                    pr[j]->ready = 1;
-                    output[pr[j]->processNumber][i] = '.';
+                    q.push(pr[j]);                         // Add process to the queue
+                    pr[j]->ready = 1;                      // Mark process as ready
+                    output[pr[j]->processNumber][i] = '.'; // Indicate waiting state
                 }
-                else if (pr[j]->ready != -1)
+                else if (pr[j]->ready != -1) // Process is ready but not completed
                 {
-
-                    output[pr[j]->processNumber][i] = '.';
+                    output[pr[j]->processNumber][i] = '.'; // Indicate waiting state
                 }
             }
         }
-        if (CPU == nullptr)
+
+        // Assign the next process from the queue to the CPU if none is running
+        if (currenlty_run == nullptr && !q.empty())
         {
-            CPU = q.front();
-            service = CPU->ServiceTime;
-            q.pop();
+            currenlty_run = q.front();            // Get the first process in the queue
+            service = currenlty_run->ServiceTime; // Initialize its service time
+            q.pop();                              // Remove it from the queue
         }
-        if (CPU != nullptr)
+
+        // Execute the currently running process
+        if (currenlty_run != nullptr)
         {
-            service--;
-            output[CPU->processNumber][i] = '*';
+            service--;                                     // Decrease the remaining service time
+            output[currenlty_run->processNumber][i] = '*'; // Indicate running state
+
+            // If the process has finished execution
             if (service == 0)
             {
-                CPU->ready = -1;
-                CPU->FinishingTime = i + 1;
-                CPU = nullptr;
+                currenlty_run->ready = -1;            // Mark process as completed
+                currenlty_run->FinishingTime = i + 1; // Record the finishing time
+                currenlty_run = nullptr;              // Release the CPU
             }
         }
     }
@@ -62,76 +75,101 @@ void FCFS(vector<string> processes, const int instants, string status, string Al
     }
 }
 
+// Function to implement Round Robin (RR) scheduling algorithm
 void RR(vector<string> processes, int quantum, const int instants, string status, string Algorithmname)
 {
+    // Create a 2D output array for visualizing process states over time
     char **output = algo_output(processes.size(), instants);
-    Process **pr = readyProcesses(processes);
+
+    // Convert process descriptions into an array of Process objects
+    Process **pr = processesarray(processes);
+
+    // Array to save original service times of processes
     int processesServiceTimes[processes.size()];
     for (size_t i = 0; i < processes.size(); i++)
     {
         processesServiceTimes[i] = pr[i]->ServiceTime;
     }
-    queue<Process *> q;
-    Process *CPU = nullptr;
-    Process *t = nullptr;
-    int currentConsumption = 0;
+
+    queue<Process *> q;               // Queue to manage processes in a round-robin manner
+    Process *currenlty_run = nullptr; // Pointer to the currently running process
+    Process *t = nullptr;             // Temporary process pointer for switching
+    int currentConsumption = 0;       // Tracks the time quantum consumed by the current process
+
+    // Main loop iterating through each time instant
     for (size_t i = 0; i < instants; i++)
     {
+        // Check if any process has arrived at the current time instant
         for (size_t j = 0; j < processes.size(); j++)
         {
             if (i >= pr[j]->ArrivalTime)
-            {
+            { // Process has arrived
                 if (pr[j]->ready == 0)
-                {
-                    q.push(pr[j]);
-                    pr[j]->ready = 1;
-                    output[pr[j]->processNumber][i] = '.';
+                {                                          // Process is not yet ready
+                    q.push(pr[j]);                         // Add process to the ready queue
+                    pr[j]->ready = 1;                      // Mark process as ready
+                    output[pr[j]->processNumber][i] = '.'; // Indicate waiting state
                 }
                 else if (pr[j]->ready > 0)
-                {
-
-                    output[pr[j]->processNumber][i] = '.';
+                {                                          // Process is already in the ready queue
+                    output[pr[j]->processNumber][i] = '.'; // Indicate waiting state
                 }
             }
         }
+
+        // Re-enqueue a previously preempted process, if any
         if (t != nullptr)
         {
-            q.push(t);
-            t = nullptr;
+            q.push(t);   // Add the process back to the queue
+            t = nullptr; // Reset the temporary pointer
         }
-        if (CPU == nullptr)
+
+        // Assign a new process to the CPU if none is running
+        if (currenlty_run == nullptr)
         {
-            CPU = q.front();
-            q.pop();
-        }
-        if (CPU != nullptr)
-        {
-            CPU->ServiceTime = CPU->ServiceTime - 1;
-            currentConsumption++;
-            output[CPU->processNumber][i] = '*';
-            if (CPU->ServiceTime == 0)
+            if (!q.empty())
             {
-                CPU->ready = -1;
-                CPU->FinishingTime = i + 1;
-                CPU = nullptr;
-                currentConsumption = 0;
+                currenlty_run = q.front(); // Get the first process in the queue
+                q.pop();                   // Remove it from the queue
             }
+        }
+
+        // Execute the currently running process
+        if (currenlty_run != nullptr)
+        {
+            currenlty_run->ServiceTime -= 1;               // Decrease remaining service time
+            currentConsumption++;                          // Increment the quantum usage counter
+            output[currenlty_run->processNumber][i] = '*'; // Indicate running state
+
+            // If the process has completed execution
+            if (currenlty_run->ServiceTime == 0)
+            {
+                currenlty_run->ready = -1;            // Mark as completed
+                currenlty_run->FinishingTime = i + 1; // Record finishing time
+                currenlty_run = nullptr;              // Release CPU
+                currentConsumption = 0;               // Reset quantum usage counter
+            }
+            // If the time quantum has been fully consumed
             else if (currentConsumption >= quantum)
             {
-                t = CPU;
-                currentConsumption = 0;
-                CPU = nullptr;
+                t = currenlty_run;       // Temporarily store the current process
+                currentConsumption = 0;  // Reset quantum usage counter
+                currenlty_run = nullptr; // Release CPU for the next process
             }
         }
     }
+
+    // Restore the original service times of processes
     for (size_t i = 0; i < processes.size(); i++)
     {
         pr[i]->ServiceTime = processesServiceTimes[i];
     }
-    string s = "trace";
+
+    // Append the quantum value to the algorithm name
     string quantum_str = to_string(quantum);
     Algorithmname = Algorithmname + quantum_str;
-    if (status.compare(s) == 0)
+
+    if (status.compare("trace") == 0)
     {
         printTrace(instants, output, processes.size(), pr, Algorithmname.append("  "));
     }
@@ -141,54 +179,68 @@ void RR(vector<string> processes, int quantum, const int instants, string status
     }
 }
 
+// Function to implement Shortest Process Next (SPN) scheduling algorithm
 void SPN(vector<string> processes, const int instants, string status, string Algorithmname)
 {
+    // Priority queue to select processes with the shortest service time and earliest arrival time
     auto compare = compareByServiceTimeAndArrivalTime;
     priority_queue<Process *, vector<Process *>, decltype(compare)> q(compare);
 
+    // Create a 2D output array for visualizing process states over time
     char **output = algo_output(processes.size(), instants);
-    Process **pr = readyProcesses(processes);
-    Process *CPU = nullptr;
-    int service;
 
+    // Convert process descriptions into an array of Process objects
+    Process **pr = processesarray(processes);
+
+    Process *currenlty_run = nullptr; // Pointer to the currently running process
+    int service;                      // Tracks the remaining service time for the running process
+
+    // Main loop iterating through each time instant
     for (size_t i = 0; i < instants; i++)
     {
+        // Check all processes for arrival at the current time
         for (size_t j = 0; j < processes.size(); j++)
         {
             if (i >= pr[j]->ArrivalTime)
-            {
+            { // Process has arrived
                 if (pr[j]->ready == 0)
-                {
-                    q.push(pr[j]);
-                    pr[j]->ready = 1;
-                    pr[j]->EntryFlag = 1;
-                    output[pr[j]->processNumber][i] = '.';
+                {                                          // Process is not yet ready
+                    q.push(pr[j]);                         // Add process to the priority queue
+                    pr[j]->ready = 1;                      // Mark as ready
+                    pr[j]->EntryFlag = 1;                  // Mark as newly entered
+                    output[pr[j]->processNumber][i] = '.'; // Indicate waiting state
                 }
                 else if (pr[j]->ready > 0)
-                {
-                    pr[j]->EntryFlag = 0;
-                    output[pr[j]->processNumber][i] = '.';
+                {                                          // Process is already in the ready queue
+                    pr[j]->EntryFlag = 0;                  // Reset the entry flag
+                    output[pr[j]->processNumber][i] = '.'; // Indicate waiting state
                 }
             }
         }
-        if (CPU == nullptr)
+
+        // Select the next process to run if no process is currently running
+        if (currenlty_run == nullptr)
         {
             if (!q.empty())
             {
-                CPU = q.top();
-                service = CPU->ServiceTime;
-                q.pop();
+                currenlty_run = q.top();              // Get the process with the shortest service time
+                service = currenlty_run->ServiceTime; // Initialize its service time
+                q.pop();                              // Remove it from the queue
             }
         }
-        if (CPU != nullptr)
+
+        // Execute the currently running process
+        if (currenlty_run != nullptr)
         {
-            service--;
-            output[CPU->processNumber][i] = '*';
+            service--;                                     // Decrease the remaining service time
+            output[currenlty_run->processNumber][i] = '*'; // Indicate running state
+
+            // If the process has finished execution
             if (service == 0)
             {
-                CPU->ready = -1;
-                CPU->FinishingTime = i + 1;
-                CPU = nullptr;
+                currenlty_run->ready = -1;            // Mark as completed
+                currenlty_run->FinishingTime = i + 1; // Record finishing time
+                currenlty_run = nullptr;              // Release CPU
             }
         }
     }
@@ -202,65 +254,77 @@ void SPN(vector<string> processes, const int instants, string status, string Alg
         printStats(pr, processes.size(), Algorithmname);
     }
 }
-
+// Function to implement Shortest Remaining Time (SRT) scheduling algorithm
 void SRT(vector<string> processes, const int instants, string status, string Algorithmname)
 {
+    // Create a 2D output array for visualizing process states over time
     char **output = algo_output(processes.size(), instants);
-    Process **pr = readyProcesses(processes);
-    vector<int> processesServiceTimes(processes.size());
 
+    // Convert process descriptions into an array of Process objects
+    Process **pr = processesarray(processes);
+
+    // Store the original service times of processes
+    vector<int> processesServiceTimes(processes.size());
     for (size_t i = 0; i < processes.size(); i++)
     {
         processesServiceTimes[i] = pr[i]->ServiceTime;
     }
 
+    // Priority queue to manage processes by shortest remaining service time and arrival time
+    // The comparator function compareByServiceTimeAndArrivalTime defines the ordering
     priority_queue<Process *, vector<Process *>, function<bool(Process *, Process *)>> q(compareByServiceTimeAndArrivalTime);
-    Process *CPU = nullptr;
 
+    Process *currenlty_run = nullptr; // Pointer to the currently running process
+
+    // Main loop iterating through each time instant
     for (size_t i = 0; i < instants; i++)
     {
+        // Check all processes for arrival at the current time
         for (size_t j = 0; j < processes.size(); j++)
         {
             if (i >= pr[j]->ArrivalTime)
-            {
+            { // Process has arrived
                 if (pr[j]->ready == 0)
-                {
-                    q.push(pr[j]);
-                    pr[j]->ready = 1;
-                    output[pr[j]->processNumber][i] = '.';
+                {                                          // Process is not yet ready
+                    q.push(pr[j]);                         // Add process to the priority queue
+                    pr[j]->ready = 1;                      // Mark as ready
+                    output[pr[j]->processNumber][i] = '.'; // Indicate waiting state
                 }
                 else if (pr[j]->ready > 0)
-                {
-                    output[pr[j]->processNumber][i] = '.';
+                {                                          // Process is already ready
+                    output[pr[j]->processNumber][i] = '.'; // Indicate waiting state
                 }
             }
         }
 
-        if (CPU == nullptr && !q.empty())
+        // If no process is currently running  select the next process
+        if (currenlty_run == nullptr && !q.empty())
         {
-            CPU = q.top();
-            q.pop();
+            currenlty_run = q.top(); // Get the process with shortest remaining time
+            q.pop();                 // Remove it from the queue
         }
 
-        if (CPU != nullptr)
+        // If a process is running, execute it
+        if (currenlty_run != nullptr)
         {
-            CPU->ServiceTime--;
-            output[CPU->processNumber][i] = '*';
+            currenlty_run->ServiceTime--;                  // Decrease the remaining service time
+            output[currenlty_run->processNumber][i] = '*'; // Indicate running state
 
-            if (CPU->ServiceTime == 0)
-            {
-                CPU->ready = -1;
-                CPU->FinishingTime = i + 1;
-                CPU = nullptr;
+            if (currenlty_run->ServiceTime == 0)
+            {                                         // If process has finished execution
+                currenlty_run->ready = -1;            // Mark process as finished
+                currenlty_run->FinishingTime = i + 1; // Record finishing time
+                currenlty_run = nullptr;              // Release
             }
             else
-            {
-                q.push(CPU);
-                CPU = nullptr;
+            {                            // If process has not finished
+                q.push(currenlty_run);   // Reinsert it into the queue
+                currenlty_run = nullptr; // Release  for potential preemption
             }
         }
     }
 
+    // Restore the original service times of processes for statistics or further use
     for (size_t i = 0; i < processes.size(); i++)
     {
         pr[i]->ServiceTime = processesServiceTimes[i];
@@ -268,18 +332,20 @@ void SRT(vector<string> processes, const int instants, string status, string Alg
 
     if (status == "trace")
     {
-        printTrace(instants, output, processes.size(), pr, Algorithmname.append("   "));
+        printTrace(instants, output, processes.size(), pr, Algorithmname.append("   ")); // Print trace
     }
     else
     {
-        printStats(pr, processes.size(), Algorithmname);
+        printStats(pr, processes.size(), Algorithmname); // Print statistics
     }
 }
 
+// hrrn compare by highest response ratio next
+// Function to implement the Highest Response Ratio Next (HRRN) scheduling algorithm
 void HRRN(vector<string> processes, const int instants, string status, string Algorithmname)
 {
     char **output = algo_output(processes.size(), instants);
-    Process **pr = readyProcesses(processes);
+    Process **pr = processesarray(processes);
     vector<int> processesServiceTimes(processes.size());
 
     for (size_t i = 0; i < processes.size(); i++)
@@ -288,7 +354,7 @@ void HRRN(vector<string> processes, const int instants, string status, string Al
     }
 
     priority_queue<Process *, vector<Process *>, function<bool(Process *, Process *)>> q(compareByHRRN);
-    Process *CPU = nullptr;
+    Process *currenlty_run = nullptr;
 
     for (size_t i = 0; i < instants; i++)
     {
@@ -310,24 +376,25 @@ void HRRN(vector<string> processes, const int instants, string status, string Al
                 }
             }
         }
-
-        if (CPU == nullptr && !q.empty())
+        // If no process is running select the next process based on HRRN
+        if (currenlty_run == nullptr && !q.empty())
         {
-            CPU = q.top();
+            currenlty_run = q.top();
             q.pop();
-            CPU->WaitingTime--;
+            currenlty_run->WaitingTime--;
         }
 
-        if (CPU != nullptr)
+        // If a process is running, execute it
+        if (currenlty_run != nullptr)
         {
-            CPU->ServiceTime--;
-            output[CPU->processNumber][i] = '*';
+            currenlty_run->ServiceTime--;
+            output[currenlty_run->processNumber][i] = '*';
 
-            if (CPU->ServiceTime == 0)
+            if (currenlty_run->ServiceTime == 0)
             {
-                CPU->ready = -1;
-                CPU->FinishingTime = i + 1;
-                CPU = nullptr;
+                currenlty_run->ready = -1;
+                currenlty_run->FinishingTime = i + 1;
+                currenlty_run = nullptr;
             }
         }
     }
@@ -346,7 +413,7 @@ void HRRN(vector<string> processes, const int instants, string status, string Al
         printStats(pr, processes.size(), Algorithmname);
     }
 }
-
+// check if queue is empty
 int Queue_empty(vector<queue<Process *>> q, int start, int end)
 {
     for (size_t i = start; i < end; i++)
@@ -361,23 +428,25 @@ int Queue_empty(vector<queue<Process *>> q, int start, int end)
 void FB(vector<string> processes, int quantum, const int instants, string status, string Algorithmname)
 {
     char **output = algo_output(processes.size(), instants);
-    Process **pr = readyProcesses(processes);
+    Process **pr = processesarray(processes);
     vector<queue<Process *>> q;
     for (size_t i = 0; i < processes.size(); i++)
     {
         queue<Process *> myq;
         q.push_back(myq);
     }
+    // Store the original service times of processes to restore later
     int processesServiceTimes[processes.size()];
     for (size_t i = 0; i < processes.size(); i++)
     {
         processesServiceTimes[i] = pr[i]->ServiceTime;
     }
-    Process *CPU = nullptr;
+    Process *currenlty_run = nullptr;
     Process *t = nullptr;
-    int consumedQuantum = 0;
-    int retriveQueueNum;
+    int cq = 0;
+    int rq;
     char LastName;
+    // Check all processes for arrival
     for (size_t i = 0; i < instants; i++)
     {
 
@@ -400,17 +469,18 @@ void FB(vector<string> processes, int quantum, const int instants, string status
         }
         if (t != nullptr)
         {
-            if (retriveQueueNum == q.size() - 1 || Queue_empty(q, 0, q.size()) == 1)
+            if (rq == q.size() - 1 || Queue_empty(q, 0, q.size()) == 1)
             {
-                q.at(retriveQueueNum).push(t);
+                q.at(rq).push(t);
             }
             else
             {
-                q.at(retriveQueueNum + 1).push(t);
+                q.at(rq + 1).push(t);
             }
             t = nullptr;
         }
-        if (CPU == nullptr)
+        // Assign a process to run if the currently running process is idle
+        if (currenlty_run == nullptr)
         {
             for (size_t k = 0; k < q.size(); k++)
             {
@@ -423,45 +493,49 @@ void FB(vector<string> processes, int quantum, const int instants, string status
                         {
                             if (!q.at(h).empty())
                             {
-                                CPU = q.at(h).front();
+                                currenlty_run = q.at(h).front();
                                 q.at(h).pop();
-                                retriveQueueNum = h;
+                                rq = h;
                                 break;
                             }
                         }
                     }
                     else
                     {
-                        CPU = q.at(k).front();
+                        currenlty_run = q.at(k).front();
                         q.at(k).pop();
-                        retriveQueueNum = k;
+                        rq = k;
                     }
                     break;
                 }
             }
         }
-        if (CPU != nullptr)
+        // Execute the process if one is running
+        if (currenlty_run != nullptr)
         {
-            CPU->ServiceTime = CPU->ServiceTime - 1;
-            consumedQuantum++;
-            output[CPU->processNumber][i] = '*';
+            currenlty_run->ServiceTime = currenlty_run->ServiceTime - 1;
+            cq++;
+            output[currenlty_run->processNumber][i] = '*';
 
-            if (CPU->ServiceTime == 0)
+            // If process completes execution
+            if (currenlty_run->ServiceTime == 0)
             {
-                CPU->ready = -1;
-                CPU->FinishingTime = i + 1;
-                CPU = nullptr;
-                consumedQuantum = 0;
+                currenlty_run->ready = -1;
+                currenlty_run->FinishingTime = i + 1;
+                currenlty_run = nullptr;
+                cq = 0;
             }
-            else if (consumedQuantum == pow(quantum, retriveQueueNum))
+            // If quantum is fully consumed, preempt the process
+            else if (cq == pow(quantum, rq))
             {
-                t = CPU;
-                LastName = CPU->ProcessName;
-                consumedQuantum = 0;
-                CPU = nullptr;
+                t = currenlty_run;
+                LastName = currenlty_run->ProcessName;
+                cq = 0;
+                currenlty_run = nullptr;
             }
         }
     }
+    // Restore original service times of processes
     for (size_t i = 0; i < processes.size(); i++)
     {
         pr[i]->ServiceTime = processesServiceTimes[i];
@@ -485,6 +559,7 @@ void FB(vector<string> processes, int quantum, const int instants, string status
         printStats(pr, processes.size(), Algorithmname);
     }
 }
+// update the priority of the processes in the queue
 void UpdatePriority(priority_queue<Process *, vector<Process *>, function<bool(Process *, Process *)>> &q)
 {
     queue<Process *> tempQueue;
@@ -506,17 +581,21 @@ void UpdatePriority(priority_queue<Process *, vector<Process *>, function<bool(P
         q.push(p);
     }
 }
-
+// Function to implement the Aging scheduling algorithm
 void Aging(vector<string> processes, int quantum, const int instants, string status, string Algorithmname)
 {
+    // Create a 2D output array for visualizing process states over time
     char **output = algo_output(processes.size(), instants);
-    Process **pr = readyProcesses(processes);
+    // Convert process descriptions into an array of Process objects
+    Process **pr = processesarray(processes);
+    // Create a priority queue to manage processes based on priority and waiting time
     priority_queue<Process *, vector<Process *>, std::function<bool(Process *, Process *)>> q(compareByPriorityAndWaitingTime);
-    Process *CPU = nullptr;
-    int consumedQuantum = 0;
+    Process *currenly_running = nullptr; // Pointer to the currently running process
+    int cq = 0;                          // Tracks the amount of quantum consumed by the current process
 
     for (size_t i = 0; i < instants; i++)
     {
+        // Iterate over all processes to check their arrival times and readiness
         for (size_t j = 0; j < processes.size(); j++)
         {
             if (i >= pr[j]->ArrivalTime)
@@ -524,7 +603,7 @@ void Aging(vector<string> processes, int quantum, const int instants, string sta
                 if (pr[j]->ready == 0)
                 {
                     q.push(pr[j]);
-                    pr[j]->ready = 1;
+                    pr[j]->ready = 1; // Mark the process as ready
                     output[pr[j]->processNumber][i] = '.';
                 }
                 else if (pr[j]->ready > 0)
@@ -533,27 +612,28 @@ void Aging(vector<string> processes, int quantum, const int instants, string sta
                 }
             }
         }
-
+        // Update priorities of processes in the priority queue
         UpdatePriority(q);
 
-        if (CPU == nullptr && !q.empty())
+        // If the Currenly running  is idle and there are processes in the queue -->assign a process
+        if (currenly_running == nullptr && !q.empty())
         {
-            CPU = q.top();
+            currenly_running = q.top();
             q.pop();
-            CPU->ready = -2;
+            currenly_running->ready = -2;
         }
 
-        if (CPU != nullptr)
+        if (currenly_running != nullptr)
         {
-            consumedQuantum++;
-            output[CPU->processNumber][i] = '*';
-            if (consumedQuantum >= quantum)
+            cq++;
+            output[currenly_running->processNumber][i] = '*';
+            if (cq >= quantum)
             {
-                CPU->priority = CPU->ServiceTime - 1;
-                CPU->ready = 0;
-                CPU->WaitingTime = 0;
-                consumedQuantum = 0;
-                CPU = nullptr;
+                currenly_running->priority = currenly_running->ServiceTime - 1;
+                currenly_running->ready = 0;
+                currenly_running->WaitingTime = 0;
+                cq = 0;
+                currenly_running = nullptr;
             }
         }
     }
@@ -568,7 +648,7 @@ void Aging(vector<string> processes, int quantum, const int instants, string sta
         printStats(pr, processes.size(), Algorithmname);
     }
 }
-
+// count numbers of algorithms
 int count_algo(string p)
 {
     int count = 0;
@@ -579,6 +659,7 @@ int count_algo(string p)
     }
     return count + 1;
 }
+// compare by service time and arrival time
 bool compareByServiceTimeAndArrivalTime(Process *p1, Process *p2)
 {
     if (p1->ServiceTime == p2->ServiceTime)
@@ -587,7 +668,7 @@ bool compareByServiceTimeAndArrivalTime(Process *p1, Process *p2)
     }
     return p1->ServiceTime > p2->ServiceTime;
 }
-
+// compare by highest response ratio next if same then arrival time
 bool compareByHRRN(Process *p1, Process *p2)
 {
     float ratio1 = (p1->WaitingTime + p1->ServiceTime) / (float)p1->ServiceTime;
@@ -598,7 +679,7 @@ bool compareByHRRN(Process *p1, Process *p2)
     }
     return ratio1 < ratio2;
 }
-
+// compare by priorty if same priorty by waiting time
 bool compareByPriorityAndWaitingTime(Process *p1, Process *p2)
 {
     if (p1->priority == p2->priority)
