@@ -18,7 +18,10 @@ The project is designed to simulate CPU scheduling algorithms by reading input d
 - Support for multiple input files.
 - Automatic generation of output files.
 - Comparison of generated output with expected output for correctness.
-- Flexible and customizable with a `Makefile`.
+- Flexible and customizable with a `Makefile`
+- a copy of the output is saved to the same directory as the testcases 
+
+
 
 ## Prerequisites
 To run this project, you need:
@@ -27,21 +30,15 @@ To run this project, you need:
 - `make` utility installed.
 
 ## Usage
+### 1. Prepare Input Files
+Place all input files in the `inputs` directory. Each input file should define the processes for scheduling in the required format.
 
-### 1. Build the Project
-Run the following command to compile the project:
+### 2. Build and run the Project
+Run the following command to compile and run the project:
 ```bash
 make
 ```
 
-### 2. Prepare Input Files
-Place all input files in the `inputs` directory. Each input file should define the processes for scheduling in the required format.
-
-### 3. Run the Simulator
-To execute the program for all input files and save outputs, use:
-```bash
-make run
-```
 This will:
 - Process all `.txt` files in the `inputs` directory.
 - Save the results in the `outputs` directory with the suffix `-test` appended to the file name.

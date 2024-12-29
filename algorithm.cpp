@@ -7,7 +7,7 @@
 #include <cmath>
 #include "process.h"
 using namespace std;
-// Function to implement First-Come, First-Served (FCFS) scheduling algorithm
+// Function to implement First Come First Served  scheduling algorithm
 void FCFS(vector<string> processes, const int instants, string status, string Algorithmname)
 {
     // Create a 2D output array to visualize the states of processes over time
@@ -30,13 +30,13 @@ void FCFS(vector<string> processes, const int instants, string status, string Al
             {
                 if (pr[j]->ready == 0) // Process has not yet been added to the ready queue
                 {
-                    q.push(pr[j]);                         // Add process to the queue
-                    pr[j]->ready = 1;                      // Mark process as ready
-                    output[pr[j]->processNumber][i] = '.'; // Indicate waiting state
+                    q.push(pr[j]);                         
+                    pr[j]->ready = 1;                      
+                    output[pr[j]->processNumber][i] = '.'; 
                 }
                 else if (pr[j]->ready != -1) // Process is ready but not completed
                 {
-                    output[pr[j]->processNumber][i] = '.'; // Indicate waiting state
+                    output[pr[j]->processNumber][i] = '.'; 
                 }
             }
         }
@@ -44,23 +44,23 @@ void FCFS(vector<string> processes, const int instants, string status, string Al
         // Assign the next process from the queue to the CPU if none is running
         if (currenlty_run == nullptr && !q.empty())
         {
-            currenlty_run = q.front();            // Get the first process in the queue
-            service = currenlty_run->ServiceTime; // Initialize its service time
-            q.pop();                              // Remove it from the queue
+            currenlty_run = q.front();            
+            service = currenlty_run->ServiceTime; 
+            q.pop();                              
         }
 
         // Execute the currently running process
         if (currenlty_run != nullptr)
         {
-            service--;                                     // Decrease the remaining service time
-            output[currenlty_run->processNumber][i] = '*'; // Indicate running state
+            service--;                                     
+            output[currenlty_run->processNumber][i] = '*'; 
 
             // If the process has finished execution
             if (service == 0)
             {
-                currenlty_run->ready = -1;            // Mark process as completed
-                currenlty_run->FinishingTime = i + 1; // Record the finishing time
-                currenlty_run = nullptr;              // Release the CPU
+                currenlty_run->ready = -1;            
+                currenlty_run->FinishingTime = i + 1; 
+                currenlty_run = nullptr;          
             }
         }
     }
@@ -75,7 +75,7 @@ void FCFS(vector<string> processes, const int instants, string status, string Al
     }
 }
 
-// Function to implement Round Robin (RR) scheduling algorithm
+// Function to implement Round Robin  scheduling algorithm
 void RR(vector<string> processes, int quantum, const int instants, string status, string Algorithmname)
 {
     // Create a 2D output array for visualizing process states over time
@@ -91,10 +91,10 @@ void RR(vector<string> processes, int quantum, const int instants, string status
         processesServiceTimes[i] = pr[i]->ServiceTime;
     }
 
-    queue<Process *> q;               // Queue to manage processes in a round-robin manner
-    Process *currenlty_run = nullptr; // Pointer to the currently running process
-    Process *t = nullptr;             // Temporary process pointer for switching
-    int currentConsumption = 0;       // Tracks the time quantum consumed by the current process
+    queue<Process *> q;               
+    Process *currenlty_run = nullptr; 
+    Process *t = nullptr;             
+    int currentConsumption = 0;      
 
     // Main loop iterating through each time instant
     for (size_t i = 0; i < instants; i++)
@@ -105,14 +105,14 @@ void RR(vector<string> processes, int quantum, const int instants, string status
             if (i >= pr[j]->ArrivalTime)
             { // Process has arrived
                 if (pr[j]->ready == 0)
-                {                                          // Process is not yet ready
-                    q.push(pr[j]);                         // Add process to the ready queue
-                    pr[j]->ready = 1;                      // Mark process as ready
-                    output[pr[j]->processNumber][i] = '.'; // Indicate waiting state
+                {                                          
+                    q.push(pr[j]);                         
+                    pr[j]->ready = 1;                      
+                    output[pr[j]->processNumber][i] = '.'; 
                 }
                 else if (pr[j]->ready > 0)
-                {                                          // Process is already in the ready queue
-                    output[pr[j]->processNumber][i] = '.'; // Indicate waiting state
+                {                                          
+                    output[pr[j]->processNumber][i] = '.'; 
                 }
             }
         }
@@ -120,8 +120,8 @@ void RR(vector<string> processes, int quantum, const int instants, string status
         // Re-enqueue a previously preempted process, if any
         if (t != nullptr)
         {
-            q.push(t);   // Add the process back to the queue
-            t = nullptr; // Reset the temporary pointer
+            q.push(t);  
+            t = nullptr; 
         }
 
         // Assign a new process to the CPU if none is running
@@ -129,32 +129,32 @@ void RR(vector<string> processes, int quantum, const int instants, string status
         {
             if (!q.empty())
             {
-                currenlty_run = q.front(); // Get the first process in the queue
-                q.pop();                   // Remove it from the queue
+                currenlty_run = q.front(); 
+                q.pop();                  
             }
         }
 
         // Execute the currently running process
         if (currenlty_run != nullptr)
         {
-            currenlty_run->ServiceTime -= 1;               // Decrease remaining service time
-            currentConsumption++;                          // Increment the quantum usage counter
-            output[currenlty_run->processNumber][i] = '*'; // Indicate running state
+            currenlty_run->ServiceTime -= 1;               
+            currentConsumption++;                          
+            output[currenlty_run->processNumber][i] = '*'; 
 
             // If the process has completed execution
             if (currenlty_run->ServiceTime == 0)
             {
-                currenlty_run->ready = -1;            // Mark as completed
-                currenlty_run->FinishingTime = i + 1; // Record finishing time
-                currenlty_run = nullptr;              // Release CPU
-                currentConsumption = 0;               // Reset quantum usage counter
+                currenlty_run->ready = -1;           
+                currenlty_run->FinishingTime = i + 1; 
+                currenlty_run = nullptr;              
+                currentConsumption = 0;               
             }
             // If the time quantum has been fully consumed
             else if (currentConsumption >= quantum)
             {
-                t = currenlty_run;       // Temporarily store the current process
-                currentConsumption = 0;  // Reset quantum usage counter
-                currenlty_run = nullptr; // Release CPU for the next process
+                t = currenlty_run;      
+                currentConsumption = 0;  
+                currenlty_run = nullptr; 
             }
         }
     }
@@ -179,7 +179,7 @@ void RR(vector<string> processes, int quantum, const int instants, string status
     }
 }
 
-// Function to implement Shortest Process Next (SPN) scheduling algorithm
+// Function to implement Shortest Process Next  scheduling algorithm
 void SPN(vector<string> processes, const int instants, string status, string Algorithmname)
 {
     // Priority queue to select processes with the shortest service time and earliest arrival time
@@ -192,9 +192,8 @@ void SPN(vector<string> processes, const int instants, string status, string Alg
     // Convert process descriptions into an array of Process objects
     Process **pr = processesarray(processes);
 
-    Process *currenlty_run = nullptr; // Pointer to the currently running process
-    int service;                      // Tracks the remaining service time for the running process
-
+    Process *currenlty_run = nullptr; 
+    int service;                      
     // Main loop iterating through each time instant
     for (size_t i = 0; i < instants; i++)
     {
@@ -204,15 +203,15 @@ void SPN(vector<string> processes, const int instants, string status, string Alg
             if (i >= pr[j]->ArrivalTime)
             { // Process has arrived
                 if (pr[j]->ready == 0)
-                {                                          // Process is not yet ready
-                    q.push(pr[j]);                         // Add process to the priority queue
-                    pr[j]->ready = 1;                      // Mark as ready
-                    pr[j]->EntryFlag = 1;                  // Mark as newly entered
-                    output[pr[j]->processNumber][i] = '.'; // Indicate waiting state
+                {                                          
+                    q.push(pr[j]);                         
+                    pr[j]->ready = 1;                      
+                    pr[j]->EntryFlag = 1;                  
+                    output[pr[j]->processNumber][i] = '.'; 
                 }
                 else if (pr[j]->ready > 0)
-                {                                          // Process is already in the ready queue
-                    pr[j]->EntryFlag = 0;                  // Reset the entry flag
+                {                                          
+                    pr[j]->EntryFlag = 0;                  
                     output[pr[j]->processNumber][i] = '.'; // Indicate waiting state
                 }
             }
@@ -223,16 +222,16 @@ void SPN(vector<string> processes, const int instants, string status, string Alg
         {
             if (!q.empty())
             {
-                currenlty_run = q.top();              // Get the process with the shortest service time
-                service = currenlty_run->ServiceTime; // Initialize its service time
-                q.pop();                              // Remove it from the queue
+                currenlty_run = q.top();            
+                service = currenlty_run->ServiceTime; 
+                q.pop();
             }
         }
 
         // Execute the currently running process
         if (currenlty_run != nullptr)
         {
-            service--;                                     // Decrease the remaining service time
+            service--;                                     
             output[currenlty_run->processNumber][i] = '*'; // Indicate running state
 
             // If the process has finished execution
@@ -240,7 +239,7 @@ void SPN(vector<string> processes, const int instants, string status, string Alg
             {
                 currenlty_run->ready = -1;            // Mark as completed
                 currenlty_run->FinishingTime = i + 1; // Record finishing time
-                currenlty_run = nullptr;              // Release CPU
+                currenlty_run = nullptr;            
             }
         }
     }
@@ -254,7 +253,7 @@ void SPN(vector<string> processes, const int instants, string status, string Alg
         printStats(pr, processes.size(), Algorithmname);
     }
 }
-// Function to implement Shortest Remaining Time (SRT) scheduling algorithm
+// Function to implement Shortest Remaining Time scheduling algorithm
 void SRT(vector<string> processes, const int instants, string status, string Algorithmname)
 {
     // Create a 2D output array for visualizing process states over time
@@ -311,8 +310,8 @@ void SRT(vector<string> processes, const int instants, string status, string Alg
             output[currenlty_run->processNumber][i] = '*'; // Indicate running state
 
             if (currenlty_run->ServiceTime == 0)
-            {                                         // If process has finished execution
-                currenlty_run->ready = -1;            // Mark process as finished
+            {                                         // process has finished execution
+                currenlty_run->ready = -1;            // finished
                 currenlty_run->FinishingTime = i + 1; // Record finishing time
                 currenlty_run = nullptr;              // Release
             }
@@ -341,7 +340,8 @@ void SRT(vector<string> processes, const int instants, string status, string Alg
 }
 
 // hrrn compare by highest response ratio next
-// Function to implement the Highest Response Ratio Next (HRRN) scheduling algorithm
+// highest response ratio next= (waiting time + service time) / service time
+// Function to implement the Highest Response Ratio Next scheduling algorithm
 void HRRN(vector<string> processes, const int instants, string status, string Algorithmname)
 {
     char **output = algo_output(processes.size(), instants);
@@ -425,6 +425,8 @@ int Queue_empty(vector<queue<Process *>> q, int start, int end)
     }
     return 1;
 }
+// Function to implement the feedback scheduling algorithm
+
 void FB(vector<string> processes, int quantum, const int instants, string status, string Algorithmname)
 {
     char **output = algo_output(processes.size(), instants);

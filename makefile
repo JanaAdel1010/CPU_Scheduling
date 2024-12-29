@@ -1,23 +1,25 @@
 all: build	run
 
 build: main.cpp
-	g++ -std=c++11 -o Lab6 main.cpp algorithm.cpp print.cpp process.cpp
+	g++ -std=c++11 -o lab6 main.cpp algorithm.cpp print.cpp process.cpp
 
-INPUT_DIR = inputs
-OUTPUT_DIR = outputs
-INPUT_FILES = $(wildcard $(INPUT_DIR)/*.txt)
+INPUT_FILES = $(wildcard testcases/*-input.txt)
+OUTPUT_FILES = $(patsubst testcases/%-input.txt,testcases/%-output.txt,$(INPUT_FILES))
 
-run: Lab6
-	@mkdir -p $(OUTPUT_DIR)  # Ensure the output directory exists
+run: build
 	@for input_file in $(INPUT_FILES); do \
-		base_name=$$(basename "$$input_file" .txt); \
-		base_name=$$(echo "$$base_name" | sed 's/-input//'); \
-		expected_output_file="$(OUTPUT_DIR)/$$base_name-output.txt"; \
-		output_file="$(OUTPUT_DIR)/$$base_name-output-test.txt"; \
-		./Lab6 < "$$input_file" > "$$output_file"; \
-		if diff -q "$$output_file" "$$expected_output_file"; then \
+		base_name=$$(basename "$$input_file" -input.txt); \
+		expected_output_file="testcases/$$base_name-output.txt"; \
+		output_file="testcases/$$base_name-output-test.txt"; \
+		./lab6 < "$$input_file" > "$$output_file"; \
+		if diff -q "$$output_file" "$$expected_output_file" > /dev/null; then \
 			echo "Test $$base_name passed."; \
 		else \
 			echo "Test $$base_name failed."; \
+			echo "Differences:"; \
+			diff "$$output_file" "$$expected_output_file"; \
 		fi; \
 	done
+
+clean:
+	rm -f lab6 testcases/*-output-test.txt
